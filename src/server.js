@@ -11,7 +11,7 @@ const { Pool } = pkg;
 import prisma from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
-// import fileRoutes from "./routes/fileRoutes.js";
+import fileRoutes from "./routes/fileRoutes.js";
 // import folderRoutes from "./routes/folderRoutes.js";
 
 dotenv.config();
@@ -55,8 +55,9 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/auth", authRoutes);
-// app.use("/api/files", fileRoutes);
+app.use("/api/files", fileRoutes);
 // app.use("/api/folders", folderRoutes);
+app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

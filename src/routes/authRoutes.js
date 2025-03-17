@@ -54,7 +54,7 @@ router.post("/logout", (req, res) => {
 // Check authentication
 router.get("/me", async (req, res) => {
     console.log("Headers:", req.headers); // Check if cookie is sent
-    console.log("Cookies:", req.cookies); // Debugging cookies
+    console.log("Cookies:", req.headers.cookie); // Debugging cookies
     console.log("Session Data:", req.session);
 
     if (!req.session?.passport?.user) {
