@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { register, login, getUser, logout } from "./api";
+import FileManager from "./components/FileManager";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -35,6 +36,7 @@ function App() {
                 <>
                     <p>Welcome, {user.email}</p>
                     <button onClick={handleLogout}>Logout</button>
+                    <FileManager user={user} />
                 </>
             ) : (
                 <>

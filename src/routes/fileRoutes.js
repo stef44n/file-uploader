@@ -8,6 +8,18 @@ import upload from "../middleware/uploadMiddleware.js";
 import prisma from "../config/db.js";
 import ensureAuthenticated from "../middleware/authMiddleware.js";
 
+router.get("/", async (req, res) => {
+    try {
+        const files = await prisma.file.findMany({
+            where: { userId: req.user.id }, // Ensure it filters by logged-in user
+        });
+        res.json(files);
+    } catch (error) {
+        console.error("Error fetching files:", error);
+        res.status(500).json({ message: "Error retrieving files" });
+    }
+});
+
 // File upload route
 router.post(
     "/upload",

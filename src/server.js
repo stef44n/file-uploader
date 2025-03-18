@@ -8,11 +8,11 @@ const pgSession = PgSession(session);
 import passport from "./config/passport.js";
 import pkg from "pg";
 const { Pool } = pkg;
-import prisma from "./config/db.js";
+// import prisma from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
-// import folderRoutes from "./routes/folderRoutes.js";
+import folderRoutes from "./routes/folderRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -56,7 +56,7 @@ app.use((req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/files", fileRoutes);
-// app.use("/api/folders", folderRoutes);
+app.use("/api/folders", folderRoutes);
 app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 5000;
