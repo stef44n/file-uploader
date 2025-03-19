@@ -1,10 +1,7 @@
-// const express = require("express");
-// const upload = require("../middleware/uploadMiddleware");
-// const prisma = require("../prismaClient"); // Make sure this is your Prisma instance
-// const { ensureAuthenticated } = require("../middleware/authMiddleware"); // Protect route
 import express from "express";
 const router = express.Router();
 import upload from "../middleware/uploadMiddleware.js";
+import path from "path";
 import prisma from "../config/db.js";
 import ensureAuthenticated from "../middleware/authMiddleware.js";
 
@@ -51,5 +48,25 @@ router.post(
         }
     }
 );
+
+// File download route
+router.get("/download/:id", async (req, res) => {
+    try {
+        const file = await prisma.file.findUnique({
+            where: { id: req.params.id },
+        });
+
+        if (!file) {
+            return res.status(404).json({ message: "File not found" });
+        }
+
+        const filePath = path.join(process.cwd(), file.path);
+        // console.log(filePath);
+        res.download(filePath, file.originalName);
+    } catch (error) {
+        console.error("Download error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 
 export default router;

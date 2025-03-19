@@ -7,6 +7,7 @@ function FileManager({ user }) {
     const [folderName, setFolderName] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = useRef(null);
+    const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         fetchFolders();
@@ -55,7 +56,7 @@ function FileManager({ user }) {
                 withCredentials: true,
             });
 
-            // ✅ Fetch updated list from server
+            // Fetch updated list from server
             fetchFiles();
 
             setSelectedFile(null);
@@ -75,7 +76,7 @@ function FileManager({ user }) {
                 <h3>Upload File</h3>
                 <input
                     type="file"
-                    ref={fileInputRef} // ✅ Attach the ref here
+                    ref={fileInputRef} // Attach the ref here
                     onChange={(e) => setSelectedFile(e.target.files[0])}
                 />
                 <button onClick={uploadFile}>Upload</button>
@@ -105,9 +106,32 @@ function FileManager({ user }) {
                 <h3>Files</h3>
                 <ul>
                     {files
-                        .filter((file) => file.id && file.name) // ✅ Ignore empty files
+                        .filter((file) => file.id && file.name) // Ignore empty files
                         .map((file) => (
-                            <li key={file.id}>{file.name}</li>
+                            <li key={file.id}>
+                                {/* Show image preview if the file is an image */}
+                                {file.mimetype.startsWith("image/") ? (
+                                    <img
+                                        src={`${apiUrl}/${file.path}`}
+                                        alt={file.name}
+                                        style={{
+                                            width: "100px",
+                                            height: "100px",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : (
+                                    <p>{file.name}</p>
+                                )}
+
+                                {/* Download Button */}
+                                <a
+                                    href={`/api/files/download/${file.id}`}
+                                    download
+                                >
+                                    <button>Download</button>
+                                </a>
+                            </li>
                         ))}
                 </ul>
             </div>
