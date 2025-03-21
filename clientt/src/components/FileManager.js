@@ -3,25 +3,13 @@ import axios from "axios";
 
 function FileManager({ user }) {
     const [files, setFiles] = useState([]);
-    const [folders, setFolders] = useState([]);
-    const [folderName, setFolderName] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
     const fileInputRef = useRef(null);
     const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
-        fetchFolders();
         fetchFiles();
     }, []);
-
-    const fetchFolders = async () => {
-        try {
-            const { data } = await axios.get("/api/folders");
-            setFolders(data);
-        } catch (error) {
-            console.error("Error fetching folders:", error);
-        }
-    };
 
     const fetchFiles = async () => {
         try {
@@ -29,18 +17,6 @@ function FileManager({ user }) {
             setFiles(data);
         } catch (error) {
             console.error("Error fetching files:", error);
-        }
-    };
-
-    const createFolder = async () => {
-        try {
-            const { data } = await axios.post("/api/folders", {
-                name: folderName,
-            });
-            setFolders([...folders, data]);
-            setFolderName("");
-        } catch (error) {
-            console.error("Error creating folder:", error);
         }
     };
 
@@ -68,6 +44,20 @@ function FileManager({ user }) {
         }
     };
 
+    const handleDelete = async (id) => {
+        const isConfirmed = window.confirm(
+            "Are you sure you want to delete this file?"
+        );
+        if (!isConfirmed) return; // If user cancels, stop execution
+
+        try {
+            await axios.delete(`/api/files/${id}`);
+            setFiles(files.filter((file) => file.id !== id)); // Update UI instantly
+        } catch (error) {
+            console.error("Error deleting file:", error);
+        }
+    };
+
     return (
         <div>
             <h2>File Manager</h2>
@@ -80,26 +70,6 @@ function FileManager({ user }) {
                     onChange={(e) => setSelectedFile(e.target.files[0])}
                 />
                 <button onClick={uploadFile}>Upload</button>
-            </div>
-
-            <div>
-                <h3>Create Folder</h3>
-                <input
-                    type="text"
-                    placeholder="Folder name"
-                    value={folderName}
-                    onChange={(e) => setFolderName(e.target.value)}
-                />
-                <button onClick={createFolder}>Create</button>
-            </div>
-
-            <div>
-                <h3>Folders</h3>
-                <ul>
-                    {folders.map((folder) => (
-                        <li key={folder.id}>{folder.name}</li>
-                    ))}
-                </ul>
             </div>
 
             <div>
@@ -131,6 +101,9 @@ function FileManager({ user }) {
                                 >
                                     <button>Download</button>
                                 </a>
+                                <button onClick={() => handleDelete(file.id)}>
+                                    🗑 Delete
+                                </button>
                             </li>
                         ))}
                 </ul>
