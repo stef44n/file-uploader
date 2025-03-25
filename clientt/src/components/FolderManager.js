@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import FileUpload from "./FileUpload";
 
 const FolderManager = () => {
     const [folders, setFolders] = useState([]);
     const [newFolderName, setNewFolderName] = useState("");
     const [selectedFolder, setSelectedFolder] = useState(null);
     const [renameInputs, setRenameInputs] = useState({});
+    const [files, setFiles] = useState([]);
 
     useEffect(() => {
         fetchFolders();
@@ -23,6 +25,16 @@ const FolderManager = () => {
             setFolders(sortedFolders);
         } catch (error) {
             console.error("Error fetching folders:", error);
+        }
+    };
+
+    const fetchFiles = async (folderId) => {
+        try {
+            const { data } = await axios.get(`/api/folders/${folderId}/files`);
+            setFiles(data);
+            setSelectedFolder(folderId);
+        } catch (error) {
+            console.error("Error fetching files:", error);
         }
     };
 
@@ -76,39 +88,174 @@ const FolderManager = () => {
         }
     };
 
+    // return (
+    //     <div>
+    //         <h2>Folders</h2>
+    //         <ul>
+    //             {folders.map((folder) => (
+    //                 <li key={folder.id}>
+    //                     <span onClick={() => setSelectedFolder(folder)}>
+    //                         {folder.name}
+    //                     </span>
+    //                     <button onClick={() => deleteFolder(folder.id)}>
+    //                         Delete
+    //                     </button>
+    //                     <input
+    //                         type="text"
+    //                         placeholder="New name"
+    //                         value={renameInputs[folder.id] || ""}
+    //                         onChange={(e) =>
+    //                             handleRenameChange(folder.id, e.target.value)
+    //                         }
+    //                     />
+    //                     <button onClick={() => handleRename(folder.id)}>
+    //                         Rename
+    //                     </button>
+    //                 </li>
+    //             ))}
+    //         </ul>
+    //         <input
+    //             type="text"
+    //             placeholder="New folder name"
+    //             value={newFolderName}
+    //             onChange={(e) => setNewFolderName(e.target.value)}
+    //         />
+    //         <button onClick={createFolder}>Create Folder</button>
+    //     </div>
+    // );
+    // return (
+    //     <div>
+    //         <FileUpload
+    //             refreshFiles={fetchFiles}
+    //             currentFolderId={selectedFolder}
+    //         />
+
+    //         <h2>{selectedFolder ? "Folder Contents" : "Folders"}</h2>
+
+    //         {selectedFolder ? (
+    //             <>
+    //                 <button
+    //                     onClick={() => {
+    //                         setSelectedFolder(null);
+    //                         setFiles([]);
+    //                     }}
+    //                 >
+    //                     🔙 Back to Folders
+    //                 </button>
+    //                 <FileUpload
+    //                     refreshFiles={fetchFiles}
+    //                     currentFolderId={selectedFolder}
+    //                 />
+    //                 <ul>
+    //                     {files.length > 0 ? (
+    //                         files.map((file) => (
+    //                             <li key={file.id}>
+    //                                 {file.name}
+    //                                 <a
+    //                                     href={`http://localhost:5000/${file.path}`}
+    //                                     download
+    //                                 >
+    //                                     📥 Download
+    //                                 </a>
+    //                             </li>
+    //                         ))
+    //                     ) : (
+    //                         <p>No files in this folder.</p>
+    //                     )}
+    //                 </ul>
+    //             </>
+    //         ) : (
+    //             <ul>
+    //                 {folders.map((folder) => (
+    //                     <li key={folder.id}>
+    //                         <button onClick={() => fetchFiles(folder.id)}>
+    //                             {folder.name} 📂
+    //                         </button>
+    //                     </li>
+    //                 ))}
+    //             </ul>
+    //         )}
+    //     </div>
+    // );
+
     return (
         <div>
-            <h2>Folders</h2>
-            <ul>
-                {folders.map((folder) => (
-                    <li key={folder.id}>
-                        <span onClick={() => setSelectedFolder(folder)}>
-                            {folder.name}
-                        </span>
-                        <button onClick={() => deleteFolder(folder.id)}>
-                            Delete
-                        </button>
-                        <input
-                            type="text"
-                            placeholder="New name"
-                            value={renameInputs[folder.id] || ""}
-                            onChange={(e) =>
-                                handleRenameChange(folder.id, e.target.value)
-                            }
-                        />
-                        <button onClick={() => handleRename(folder.id)}>
-                            Rename
-                        </button>
-                    </li>
-                ))}
-            </ul>
-            <input
-                type="text"
-                placeholder="New folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-            />
-            <button onClick={createFolder}>Create Folder</button>
+            <h2>{selectedFolder ? "Folder Contents" : "Folders"}</h2>
+
+            {selectedFolder ? (
+                <>
+                    <button
+                        onClick={() => {
+                            setSelectedFolder(null);
+                            setFiles([]);
+                        }}
+                    >
+                        🔙 Back to Folders
+                    </button>
+
+                    <FileUpload
+                        refreshFiles={() => fetchFiles(selectedFolder)}
+                        currentFolderId={selectedFolder}
+                    />
+
+                    <ul>
+                        {files.length > 0 ? (
+                            files.map((file) => (
+                                <li key={file.id}>
+                                    {file.name}
+                                    <a
+                                        href={`http://localhost:5000/${file.path}`}
+                                        download
+                                    >
+                                        {" "}
+                                        📥 Download
+                                    </a>
+                                </li>
+                            ))
+                        ) : (
+                            <p>No files in this folder.</p>
+                        )}
+                    </ul>
+                </>
+            ) : (
+                <>
+                    <input
+                        type="text"
+                        placeholder="New folder name"
+                        value={newFolderName}
+                        onChange={(e) => setNewFolderName(e.target.value)}
+                    />
+                    <button onClick={createFolder}>Create Folder</button>
+
+                    <ul>
+                        {folders.map((folder) => (
+                            <li key={folder.id}>
+                                <button onClick={() => fetchFiles(folder.id)}>
+                                    {folder.name} 📂
+                                </button>
+                                <button onClick={() => deleteFolder(folder.id)}>
+                                    🗑️
+                                </button>
+
+                                <input
+                                    type="text"
+                                    placeholder="New name"
+                                    value={renameInputs[folder.id] || ""}
+                                    onChange={(e) =>
+                                        handleRenameChange(
+                                            folder.id,
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                                <button onClick={() => handleRename(folder.id)}>
+                                    ✏️
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </>
+            )}
         </div>
     );
 };

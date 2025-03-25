@@ -52,6 +52,22 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+// Get all files in a specific folder
+router.get("/:folderId/files", async (req, res) => {
+    const { folderId } = req.params;
+
+    try {
+        const files = await prisma.file.findMany({
+            where: { folderId: folderId }, // Get files only in this folder
+        });
+
+        res.json(files);
+    } catch (error) {
+        console.error("Error fetching files in folder:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // Update folder name
 router.put("/:id", ensureAuthenticated, async (req, res) => {
     const { id } = req.params;

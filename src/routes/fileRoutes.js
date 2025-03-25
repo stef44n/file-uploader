@@ -3,7 +3,7 @@ const router = express.Router();
 import upload from "../middleware/uploadMiddleware.js";
 import path from "path";
 import prisma from "../config/db.js";
-import ensureAuthenticated from "../middleware/authMiddleware.js";
+// import ensureAuthenticated from "../middleware/authMiddleware.js";
 import fs from "fs";
 
 router.get("/", async (req, res) => {
@@ -19,36 +19,33 @@ router.get("/", async (req, res) => {
 });
 
 // File upload route
-router.post(
-    "/upload",
-    ensureAuthenticated,
-    upload.single("file"),
-    async (req, res) => {
-        try {
-            if (!req.file) {
-                return res.status(400).json({ message: "No file uploaded" });
-            }
+router.post("/upload", upload.single("file"), async (req, res) => {
+    const { folderId } = req.body; // Get folder ID from request body
+    const userId = req.user?.id; // Assuming authentication middleware sets req.user
 
-            // Save file metadata to database
-            const file = await prisma.file.create({
-                data: {
-                    name: req.file.filename,
-                    originalName: req.file.originalname, // Store original filename
-                    size: req.file.size,
-                    mimetype: req.file.mimetype, // Store file type
-                    path: req.file.path,
-                    userId: req.user.id,
-                    folderId: req.body.folderId || null, // Allow folder uploads
-                },
-            });
-
-            res.json({ message: "File uploaded successfully", file });
-        } catch (error) {
-            console.error("File upload error:", error);
-            res.status(500).json({ message: "Internal server error" });
-        }
+    if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
     }
-);
+
+    try {
+        const newFile = await prisma.file.create({
+            data: {
+                name: req.file.filename,
+                originalName: req.file.originalname,
+                size: req.file.size,
+                mimetype: req.file.mimetype,
+                path: req.file.path,
+                userId: userId,
+                folderId: folderId || null, // Can be null if no folder is selected
+            },
+        });
+
+        res.status(201).json(newFile);
+    } catch (error) {
+        console.error("Error uploading file:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 
 // File download route
 router.get("/download/:id", async (req, res) => {
