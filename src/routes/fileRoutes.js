@@ -67,6 +67,23 @@ router.get("/download/:id", async (req, res) => {
     }
 });
 
+router.put("/:fileId/move", async (req, res) => {
+    const { fileId } = req.params;
+    const { newFolderId } = req.body;
+
+    try {
+        const updatedFile = await prisma.file.update({
+            where: { id: fileId },
+            data: { folderId: newFolderId || null }, // Move to a folder or set as "unsorted"
+        });
+
+        res.json(updatedFile);
+    } catch (error) {
+        console.error("Error moving file:", error);
+        res.status(500).json({ message: "Error moving file" });
+    }
+});
+
 // DELETE /api/files/:id - Delete a file
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
