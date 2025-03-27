@@ -84,6 +84,33 @@ router.put("/:fileId/move", async (req, res) => {
     }
 });
 
+// Route to get file details
+router.get("/:fileId/details", async (req, res) => {
+    const { fileId } = req.params;
+
+    try {
+        const file = await prisma.file.findUnique({
+            where: { id: fileId }, // Since ID is a UUID (string), no need to parseInt
+        });
+
+        if (!file) {
+            return res.status(404).json({ message: "File not found" });
+        }
+
+        res.json({
+            id: file.id,
+            name: file.name,
+            size: file.size, // Ensure this field exists in your schema
+            mimetype: file.mimetype,
+            uploadTime: file.createdAt, // Prisma uses camelCase
+            path: file.path, // Assuming path is stored in DB
+        });
+    } catch (error) {
+        console.error("Error fetching file details:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 // DELETE /api/files/:id - Delete a file
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;

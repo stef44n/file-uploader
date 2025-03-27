@@ -8,6 +8,7 @@ function FileManager({ user }) {
     const [selectedFolder, setSelectedFolder] = useState(null);
     const [unsortedFiles, setUnsortedFiles] = useState([]);
     const [moveSelections, setMoveSelections] = useState({});
+    const [selectedFile, setSelectedFile] = useState(null);
     const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
@@ -43,6 +44,15 @@ function FileManager({ user }) {
         }
     };
 
+    const fetchFileDetails = async (fileId) => {
+        try {
+            const { data } = await axios.get(`/api/files/${fileId}/details`);
+            setSelectedFile(data);
+        } catch (error) {
+            console.error("Error fetching file details:", error);
+        }
+    };
+
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this file?"))
             return;
@@ -72,19 +82,24 @@ function FileManager({ user }) {
 
     const FileItem = ({ file }) => (
         <li>
-            {file.mimetype.startsWith("image/") ? (
-                <img
-                    src={`${apiUrl}/${file.path}`}
-                    alt={file.name}
-                    style={{
-                        width: "100px",
-                        height: "100px",
-                        objectFit: "cover",
-                    }}
-                />
-            ) : (
-                <p>{file.name}</p>
-            )}
+            <div
+                onClick={() => fetchFileDetails(file.id)}
+                style={{ cursor: "pointer" }}
+            >
+                {file.mimetype.startsWith("image/") ? (
+                    <img
+                        src={`${apiUrl}/${file.path}`}
+                        alt={file.name}
+                        style={{
+                            width: "100px",
+                            height: "100px",
+                            objectFit: "cover",
+                        }}
+                    />
+                ) : (
+                    <p>{file.name}</p>
+                )}
+            </div>
             <a href={`/api/files/download/${file.id}`} download>
                 <button>Download 📥</button>
             </a>
@@ -157,6 +172,19 @@ function FileManager({ user }) {
                     </ul>
                     <FileList title="Unsorted Files" files={unsortedFiles} />
                 </>
+            )}
+            {selectedFile && (
+                <div className="modal">
+                    <h2>File Details</h2>
+                    <p>Name: {selectedFile.name}</p>
+                    <p>Size: {selectedFile.size} bytes</p>
+                    <p>Type: {selectedFile.mimetype}</p>
+                    <p>
+                        Uploaded:{" "}
+                        {new Date(selectedFile.uploadTime).toLocaleString()}
+                    </p>
+                    <button onClick={() => setSelectedFile(null)}>Close</button>
+                </div>
             )}
         </div>
     );
