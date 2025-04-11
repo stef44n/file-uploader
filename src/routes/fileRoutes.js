@@ -145,4 +145,17 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
+// GET /api/files/unsorted
+router.get("/unsorted", async (req, res) => {
+    try {
+        const unsortedFiles = await prisma.file.findMany({
+            where: { folderId: null },
+        });
+        res.json(unsortedFiles);
+    } catch (error) {
+        console.error("Error fetching unsorted files:", error);
+        res.status(500).json({ message: "Failed to fetch unsorted files" });
+    }
+});
+
 export default router;

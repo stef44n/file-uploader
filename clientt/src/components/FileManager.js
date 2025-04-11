@@ -1,193 +1,228 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import FileUpload from "./FileUpload";
+import FileModal from "./FileModal";
 
-function FileManager({ user }) {
-    const [files, setFiles] = useState([]);
-    const [folders, setFolders] = useState([]);
-    const [selectedFolder, setSelectedFolder] = useState(null);
-    const [unsortedFiles, setUnsortedFiles] = useState([]);
-    const [moveSelections, setMoveSelections] = useState({});
-    const [selectedFile, setSelectedFile] = useState(null);
-    const apiUrl = process.env.REACT_APP_API_URL;
+const FileManager = ({
+    selectedFolder,
+    files = [],
+    folders = [],
+    refreshFiles,
+    fetchUnsortedFiles,
+}) => {
+    const [moveTargets, setMoveTargets] = useState({}); // { fileId: newFolderId }
+    const [selectedFileInfo, setSelectedFileInfo] = useState(null);
 
-    useEffect(() => {
-        fetchFolders();
-        fetchUnsortedFiles();
-    }, []);
-
-    const fetchFolders = async () => {
-        try {
-            const { data } = await axios.get("/api/folders");
-            setFolders(data);
-        } catch (error) {
-            console.error("Error fetching folders:", error);
-        }
+    const handleSelectChange = (fileId, folderId) => {
+        setMoveTargets((prev) => ({ ...prev, [fileId]: folderId }));
     };
 
-    const fetchFiles = async (folderId) => {
+    const handleConfirmMove = async (fileId, targetFolderId) => {
         try {
-            const { data } = await axios.get(`/api/folders/${folderId}/files`);
-            setFiles(data);
-            setSelectedFolder(folderId);
-        } catch (error) {
-            console.error("Error fetching files:", error);
-        }
-    };
+            const newFolderId = moveTargets[fileId] || null;
 
-    const fetchUnsortedFiles = async () => {
-        try {
-            const { data } = await axios.get("/api/files");
-            setUnsortedFiles(data.filter((file) => file.folderId === null));
-        } catch (error) {
-            console.error("Error fetching unsorted files:", error);
-        }
-    };
+            await axios.put(`/api/files/${fileId}/move`, {
+                newFolderId,
+            });
 
-    const fetchFileDetails = async (fileId) => {
-        try {
-            const { data } = await axios.get(`/api/files/${fileId}/details`);
-            setSelectedFile(data);
-        } catch (error) {
-            console.error("Error fetching file details:", error);
-        }
-    };
+            setMoveTargets((prev) => {
+                const updated = { ...prev };
+                delete updated[fileId];
+                return updated;
+            });
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this file?"))
-            return;
-        try {
-            await axios.delete(`/api/files/${id}`);
-            setFiles((prev) => prev.filter((file) => file.id !== id));
-            setUnsortedFiles((prev) => prev.filter((file) => file.id !== id));
-        } catch (error) {
-            console.error("Error deleting file:", error);
-        }
-    };
+            if (!targetFolderId) {
+                // If moving to unsorted, make sure unsorted list is updated
+                fetchUnsortedFiles();
+            }
 
-    const moveFile = async (fileId) => {
-        const newFolderId = moveSelections[fileId];
-        if (!newFolderId && newFolderId !== "") return;
-        try {
-            await axios.put(`/api/files/${fileId}/move`, { newFolderId });
-            setFiles((prev) => prev.filter((file) => file.id !== fileId));
-            setUnsortedFiles((prev) =>
-                prev.filter((file) => file.id !== fileId)
-            );
-            setMoveSelections((prev) => ({ ...prev, [fileId]: "" }));
+            refreshFiles?.(selectedFolder?.id);
         } catch (error) {
             console.error("Error moving file:", error);
         }
     };
 
-    const FileItem = ({ file }) => (
-        <li>
-            <div
-                onClick={() => fetchFileDetails(file.id)}
-                style={{ cursor: "pointer" }}
-            >
-                {file.mimetype.startsWith("image/") ? (
-                    <img
-                        src={`${apiUrl}/${file.path}`}
-                        alt={file.name}
-                        style={{
-                            width: "100px",
-                            height: "100px",
-                            objectFit: "cover",
-                        }}
-                    />
-                ) : (
-                    <p>{file.name}</p>
-                )}
-            </div>
-            <a href={`/api/files/download/${file.id}`} download>
-                <button>Download 📥</button>
-            </a>
-            <button onClick={() => handleDelete(file.id)}>🗑 Delete</button>
-            <select
-                value={moveSelections[file.id] || ""}
-                onChange={(e) =>
-                    setMoveSelections((prev) => ({
-                        ...prev,
-                        [file.id]: e.target.value,
-                    }))
-                }
-            >
-                <option value="" disabled>
-                    Move to...
-                </option>
-                <option value="">📂 Unsorted</option>
-                {folders.map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                        {folder.name}
-                    </option>
-                ))}
-            </select>
-            <button onClick={() => moveFile(file.id)}>Move</button>
-        </li>
-    );
-
-    const FileList = ({ title, files }) => (
-        <div>
-            <h2>{title}</h2>
-            <ul>
-                {files.length > 0 ? (
-                    files.map((file) => <FileItem key={file.id} file={file} />)
-                ) : (
-                    <p>No files found.</p>
-                )}
-            </ul>
-        </div>
-    );
+    const deleteFile = async (fileId) => {
+        try {
+            await axios.delete(`/api/files/${fileId}`);
+            refreshFiles?.(selectedFolder?.id);
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            alert("There was an issue deleting the file.");
+        }
+    };
 
     return (
         <div>
-            <FileUpload
-                refreshFiles={() => fetchFiles(selectedFolder)}
-                currentFolderId={selectedFolder}
-            />
-            {selectedFolder ? (
-                <>
-                    <button
-                        onClick={() => {
-                            setSelectedFolder(null);
-                            setFiles([]);
-                        }}
-                    >
-                        🔙 Back to Folders
-                    </button>
-                    <FileList title="Folder Contents" files={files} />
-                </>
-            ) : (
-                <>
-                    <h2>Folders</h2>
-                    <ul>
-                        {folders.map((folder) => (
-                            <li key={folder.id}>
-                                <button onClick={() => fetchFiles(folder.id)}>
-                                    {folder.name} 📂
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                    <FileList title="Unsorted Files" files={unsortedFiles} />
-                </>
+            {selectedFolder && (
+                <h3 style={{ marginTop: "1rem" }}>
+                    Files in: <strong>{selectedFolder.name}</strong>
+                </h3>
             )}
-            {selectedFile && (
-                <div className="modal">
-                    <h2>File Details</h2>
-                    <p>Name: {selectedFile.name}</p>
-                    <p>Size: {selectedFile.size} bytes</p>
-                    <p>Type: {selectedFile.mimetype}</p>
-                    <p>
-                        Uploaded:{" "}
-                        {new Date(selectedFile.uploadTime).toLocaleString()}
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                        "repeat(auto-fill, minmax(120px, 1fr))",
+                    gap: "1rem",
+                    marginTop: "1rem",
+                }}
+            >
+                {files.length > 0 ? (
+                    files.map((file) => {
+                        const isImage = /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(
+                            file.name
+                        );
+                        const selectedMove =
+                            moveTargets[file.id] ?? file.folderId ?? "";
+                        const hasChange =
+                            selectedMove !== (file.folderId ?? "");
+
+                        return (
+                            <div
+                                key={file.id}
+                                style={{
+                                    textAlign: "center",
+                                }}
+                            >
+                                {isImage ? (
+                                    <img
+                                        onClick={() =>
+                                            setSelectedFileInfo(file)
+                                        }
+                                        src={`http://localhost:5000/${file.path}`}
+                                        alt={file.name}
+                                        style={{
+                                            cursor: "pointer",
+                                            width: "100%",
+                                            height: "100px",
+                                            objectFit: "cover",
+                                            borderRadius: "8px",
+                                            boxShadow:
+                                                "0 2px 6px rgba(0,0,0,0.1)",
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        onClick={() =>
+                                            setSelectedFileInfo(file)
+                                        }
+                                        style={{
+                                            cursor: "pointer",
+                                            height: "100px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            backgroundColor: "#f0f0f0",
+                                            borderRadius: "8px",
+                                            boxShadow:
+                                                "0 2px 6px rgba(0,0,0,0.1)",
+                                            padding: "0.5rem",
+                                        }}
+                                    >
+                                        {file.name}
+                                    </div>
+                                )}
+
+                                <div style={{ marginTop: "0.5rem" }}>
+                                    <a
+                                        href={`http://localhost:5000/${file.path}`}
+                                        download
+                                        style={{
+                                            display: "inline-block",
+                                            fontSize: "0.85rem",
+                                            marginBottom: "0.25rem",
+                                        }}
+                                    >
+                                        📥 Download
+                                    </a>
+
+                                    <button
+                                        onClick={() => {
+                                            const confirmDelete =
+                                                window.confirm(
+                                                    "Are you sure you want to delete this file?"
+                                                );
+                                            if (confirmDelete) {
+                                                deleteFile(file.id);
+                                            }
+                                        }}
+                                        style={{
+                                            marginTop: "0.25rem",
+                                            backgroundColor: "#dc3545",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "4px",
+                                            padding: "0.25rem 0.5rem",
+                                            fontSize: "0.75rem",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        🗑️ Delete
+                                    </button>
+
+                                    <div>
+                                        <select
+                                            value={selectedMove}
+                                            onChange={(e) =>
+                                                handleSelectChange(
+                                                    file.id,
+                                                    e.target.value
+                                                )
+                                            }
+                                            style={{
+                                                fontSize: "0.8rem",
+                                                padding: "0.25rem",
+                                                marginTop: "0.25rem",
+                                            }}
+                                        >
+                                            <option value="">Unsorted</option>
+                                            {folders.map((folder) => (
+                                                <option
+                                                    key={folder.id}
+                                                    value={folder.id}
+                                                >
+                                                    {folder.name}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        {hasChange && (
+                                            <button
+                                                onClick={() =>
+                                                    handleConfirmMove(file.id)
+                                                }
+                                                style={{
+                                                    marginTop: "0.3rem",
+                                                    fontSize: "0.75rem",
+                                                    padding: "0.25rem 0.5rem",
+                                                    cursor: "pointer",
+                                                    backgroundColor: "#007bff",
+                                                    color: "white",
+                                                    border: "none",
+                                                    borderRadius: "4px",
+                                                }}
+                                            >
+                                                Move
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })
+                ) : (
+                    <p style={{ gridColumn: "1/-1" }}>
+                        No files in this folder.
                     </p>
-                    <button onClick={() => setSelectedFile(null)}>Close</button>
-                </div>
-            )}
+                )}
+            </div>
+            <FileModal
+                file={selectedFileInfo}
+                onClose={() => setSelectedFileInfo(null)}
+            />
         </div>
     );
-}
+};
 
 export default FileManager;
