@@ -86,15 +86,27 @@ router.put("/:id", ensureAuthenticated, async (req, res) => {
 
 // Delete a folder
 router.delete("/:id", ensureAuthenticated, async (req, res) => {
-    const { id } = req.params;
+    const folderId = req.params.id; // UUID
+
     try {
-        await prisma.folder.delete({
-            where: { id, userId: req.user.id },
+        // Delete all files in the folder
+        await prisma.file.deleteMany({
+            where: {
+                folderId: folderId,
+            },
         });
-        res.json({ message: "Folder deleted" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Error deleting folder" });
+
+        // Then delete the folder
+        await prisma.folder.delete({
+            where: {
+                id: folderId,
+            },
+        });
+
+        res.status(200).json({ message: "Folder and its files deleted." });
+    } catch (error) {
+        console.error("Error deleting folder and its files:", error);
+        res.status(500).json({ error: "Failed to delete folder and files." });
     }
 });
 

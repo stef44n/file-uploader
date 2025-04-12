@@ -49,7 +49,7 @@ const FolderList = ({
     };
 
     const deleteFolder = async (id) => {
-        if (!window.confirm("Delete this folder?")) return;
+        if (!window.confirm("Delete this folder and all its files?")) return;
         await axios.delete(`/api/folders/${id}`);
         refreshFolders();
         onSelect(null);
