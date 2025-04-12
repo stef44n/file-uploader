@@ -54,7 +54,13 @@ const FileManager = ({
     return (
         <div>
             {selectedFolder && (
-                <h3 style={{ marginTop: "1rem" }}>
+                <h3
+                    style={{
+                        marginTop: "2rem",
+                        fontSize: "1.5rem",
+                        fontWeight: "600",
+                    }}
+                >
                     Files in: <strong>{selectedFolder.name}</strong>
                 </h3>
             )}
@@ -63,9 +69,9 @@ const FileManager = ({
                 style={{
                     display: "grid",
                     gridTemplateColumns:
-                        "repeat(auto-fill, minmax(120px, 1fr))",
-                    gap: "1rem",
-                    marginTop: "1rem",
+                        "repeat(auto-fill, minmax(140px, 1fr))",
+                    gap: "1.5rem",
+                    marginTop: "1.5rem",
                 }}
             >
                 {files.length > 0 ? (
@@ -82,6 +88,13 @@ const FileManager = ({
                             <div
                                 key={file.id}
                                 style={{
+                                    backgroundColor: "#fff",
+                                    padding: "1rem",
+                                    borderRadius: "10px",
+                                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
                                     textAlign: "center",
                                 }}
                             >
@@ -97,9 +110,8 @@ const FileManager = ({
                                             width: "100%",
                                             height: "100px",
                                             objectFit: "cover",
-                                            borderRadius: "8px",
-                                            boxShadow:
-                                                "0 2px 6px rgba(0,0,0,0.1)",
+                                            borderRadius: "6px",
+                                            marginBottom: "0.5rem",
                                         }}
                                     />
                                 ) : (
@@ -110,113 +122,127 @@ const FileManager = ({
                                         style={{
                                             cursor: "pointer",
                                             height: "100px",
+                                            width: "100%",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
                                             backgroundColor: "#f0f0f0",
-                                            borderRadius: "8px",
-                                            boxShadow:
-                                                "0 2px 6px rgba(0,0,0,0.1)",
+                                            borderRadius: "6px",
+                                            marginBottom: "0.5rem",
                                             padding: "0.5rem",
+                                            fontSize: "0.85rem",
+                                            overflow: "hidden",
                                         }}
                                     >
                                         {file.name}
                                     </div>
                                 )}
 
-                                <div style={{ marginTop: "0.5rem" }}>
+                                <div
+                                    style={{
+                                        fontSize: "0.85rem",
+                                        marginBottom: "0.5rem",
+                                    }}
+                                >
                                     <a
                                         href={`http://localhost:5000/${file.path}`}
                                         download
                                         style={{
+                                            textDecoration: "none",
+                                            color: "#007bff",
+                                            marginBottom: "0.5rem",
                                             display: "inline-block",
-                                            fontSize: "0.85rem",
-                                            marginBottom: "0.25rem",
                                         }}
                                     >
                                         📥 Download
                                     </a>
+                                </div>
 
+                                <button
+                                    onClick={() => {
+                                        const confirmDelete = window.confirm(
+                                            "Are you sure you want to delete this file?"
+                                        );
+                                        if (confirmDelete) {
+                                            deleteFile(file.id);
+                                        }
+                                    }}
+                                    style={{
+                                        backgroundColor: "#dc3545",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "4px",
+                                        padding: "0.4rem 0.6rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer",
+                                        marginBottom: "0.5rem",
+                                    }}
+                                >
+                                    🗑️ Delete
+                                </button>
+
+                                <select
+                                    value={selectedMove}
+                                    onChange={(e) =>
+                                        handleSelectChange(
+                                            file.id,
+                                            e.target.value
+                                        )
+                                    }
+                                    style={{
+                                        fontSize: "0.8rem",
+                                        padding: "0.35rem",
+                                        width: "100%",
+                                        borderRadius: "4px",
+                                        border: "1px solid #ccc",
+                                        marginBottom: "0.4rem",
+                                    }}
+                                >
+                                    <option value="">Unsorted</option>
+                                    {folders.map((folder) => (
+                                        <option
+                                            key={folder.id}
+                                            value={folder.id}
+                                        >
+                                            {folder.name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {hasChange && (
                                     <button
-                                        onClick={() => {
-                                            const confirmDelete =
-                                                window.confirm(
-                                                    "Are you sure you want to delete this file?"
-                                                );
-                                            if (confirmDelete) {
-                                                deleteFile(file.id);
-                                            }
-                                        }}
+                                        onClick={() =>
+                                            handleConfirmMove(file.id)
+                                        }
                                         style={{
-                                            marginTop: "0.25rem",
-                                            backgroundColor: "#dc3545",
+                                            backgroundColor: "#007bff",
                                             color: "white",
                                             border: "none",
                                             borderRadius: "4px",
-                                            padding: "0.25rem 0.5rem",
+                                            padding: "0.35rem 0.6rem",
                                             fontSize: "0.75rem",
                                             cursor: "pointer",
                                         }}
                                     >
-                                        🗑️ Delete
+                                        Move
                                     </button>
-
-                                    <div>
-                                        <select
-                                            value={selectedMove}
-                                            onChange={(e) =>
-                                                handleSelectChange(
-                                                    file.id,
-                                                    e.target.value
-                                                )
-                                            }
-                                            style={{
-                                                fontSize: "0.8rem",
-                                                padding: "0.25rem",
-                                                marginTop: "0.25rem",
-                                            }}
-                                        >
-                                            <option value="">Unsorted</option>
-                                            {folders.map((folder) => (
-                                                <option
-                                                    key={folder.id}
-                                                    value={folder.id}
-                                                >
-                                                    {folder.name}
-                                                </option>
-                                            ))}
-                                        </select>
-
-                                        {hasChange && (
-                                            <button
-                                                onClick={() =>
-                                                    handleConfirmMove(file.id)
-                                                }
-                                                style={{
-                                                    marginTop: "0.3rem",
-                                                    fontSize: "0.75rem",
-                                                    padding: "0.25rem 0.5rem",
-                                                    cursor: "pointer",
-                                                    backgroundColor: "#007bff",
-                                                    color: "white",
-                                                    border: "none",
-                                                    borderRadius: "4px",
-                                                }}
-                                            >
-                                                Move
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         );
                     })
                 ) : (
-                    <p style={{ gridColumn: "1/-1" }}>
+                    <p
+                        style={{
+                            gridColumn: "1/-1",
+                            fontSize: "1rem",
+                            textAlign: "center",
+                        }}
+                    >
                         No files in this folder.
                     </p>
                 )}
             </div>
+
             <FileModal
                 file={selectedFileInfo}
                 onClose={() => setSelectedFileInfo(null)}

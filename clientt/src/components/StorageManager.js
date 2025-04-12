@@ -51,18 +51,49 @@ const StorageManager = () => {
     }, []);
 
     return (
-        <div>
-            <h2>Storage Manager</h2>
+        <div
+            style={{
+                padding: "1.5rem",
+                backgroundColor: "#f9f9f9",
+                borderRadius: "10px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                marginTop: "2rem",
+            }}
+        >
+            <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                🗃️ Storage Manager
+            </h2>
 
-            <FolderList
-                folders={folders}
-                onSelect={setSelectedFolder}
-                refreshFolders={fetchFolders}
-                fetchFiles={fetchFiles}
-                setFiles={setFiles}
-                selectedFolderId={selectedFolder?.id}
-            />
-            {selectedFolder && (
+            {/* Folder List Section */}
+            <div
+                style={{
+                    marginBottom: "1.5rem",
+                    padding: "1rem",
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                }}
+            >
+                <FolderList
+                    folders={folders}
+                    onSelect={setSelectedFolder}
+                    refreshFolders={fetchFolders}
+                    fetchFiles={fetchFiles}
+                    setFiles={setFiles}
+                    selectedFolderId={selectedFolder?.id}
+                />
+            </div>
+
+            {/* Upload UI */}
+            <div
+                style={{
+                    marginBottom: "1.5rem",
+                    padding: "1rem",
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                }}
+            >
                 <FileUpload
                     refreshFiles={() => {
                         if (selectedFolder) {
@@ -73,44 +104,44 @@ const StorageManager = () => {
                     }}
                     currentFolderId={selectedFolder?.id || ""}
                 />
-            )}
-            {!selectedFolder && (
-                <FileUpload
-                    refreshFiles={() => {
-                        if (selectedFolder) {
-                            fetchFiles(selectedFolder.id);
-                        } else {
-                            fetchUnsortedFiles();
-                        }
+            </div>
+
+            {/* File Manager / Unsorted Files Display */}
+            {selectedFolder ? (
+                <div
+                    style={{
+                        padding: "1rem",
+                        backgroundColor: "#fff",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
                     }}
-                    currentFolderId={selectedFolder?.id || ""}
-                />
-            )}
-            {/* Show files and folder CRUD functions when a folder is selected */}
-            {selectedFolder && (
-                <div>
+                >
                     <FileManager
                         files={files}
-                        folders={folders} // ← important
+                        folders={folders}
                         selectedFolder={selectedFolder}
                         refreshFiles={fetchFiles}
-                        // unsortedFiles={unsortedFiles}
                         fetchUnsortedFiles={fetchUnsortedFiles}
                     />
-                    {/* <h3>Folder: {selectedFolder.name}</h3>
-                    <h4>Files</h4> */}
                 </div>
-            )}
-            {!selectedFolder && (
-                <>
-                    <h3>Unsorted Files</h3>
+            ) : (
+                <div
+                    style={{
+                        marginTop: "2rem",
+                        padding: "1rem",
+                        backgroundColor: "#fff",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                    }}
+                >
+                    <h3 style={{ marginBottom: "1rem" }}>🗂️ Unsorted Files</h3>
                     <UnsortedFiles
                         unsortedFiles={unsortedFiles}
                         folders={folders}
                         fetchUnsortedFiles={fetchUnsortedFiles}
                         refreshFolders={fetchFolders}
                     />
-                </>
+                </div>
             )}
         </div>
     );
