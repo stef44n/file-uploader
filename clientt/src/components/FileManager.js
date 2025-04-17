@@ -9,7 +9,7 @@ const FileManager = ({
     refreshFiles,
     fetchUnsortedFiles,
 }) => {
-    const [moveTargets, setMoveTargets] = useState({}); // { fileId: newFolderId }
+    const [moveTargets, setMoveTargets] = useState({});
     const [selectedFileInfo, setSelectedFileInfo] = useState(null);
 
     const handleSelectChange = (fileId, folderId) => {
@@ -30,11 +30,7 @@ const FileManager = ({
                 return updated;
             });
 
-            if (!targetFolderId) {
-                // If moving to unsorted, make sure unsorted list is updated
-                fetchUnsortedFiles();
-            }
-
+            if (!targetFolderId) fetchUnsortedFiles();
             refreshFiles?.(selectedFolder?.id);
         } catch (error) {
             console.error("Error moving file:", error);
@@ -76,14 +72,12 @@ const FileManager = ({
             >
                 {files.length > 0 ? (
                     files.map((file) => {
-                        const isImage = /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(
-                            file.name
-                        );
+                        const isImage = file.mimetype?.startsWith("image/");
                         const selectedMove =
                             moveTargets[file.id] ?? file.folderId ?? "";
                         const hasChange =
                             selectedMove !== (file.folderId ?? "");
-
+                        // console.log("files------------***************", files);
                         return (
                             <div
                                 key={file.id}
@@ -98,13 +92,13 @@ const FileManager = ({
                                     textAlign: "center",
                                 }}
                             >
-                                {isImage ? (
+                                {isImage && file.url ? (
                                     <img
                                         onClick={() =>
                                             setSelectedFileInfo(file)
                                         }
-                                        src={`http://localhost:5000/${file.path}`}
-                                        alt={file.name}
+                                        src={file.url}
+                                        alt={file.originalName || file.name}
                                         style={{
                                             cursor: "pointer",
                                             width: "100%",
@@ -144,18 +138,21 @@ const FileManager = ({
                                         marginBottom: "0.5rem",
                                     }}
                                 >
-                                    <a
-                                        href={`http://localhost:5000/${file.path}`}
-                                        download
-                                        style={{
-                                            textDecoration: "none",
-                                            color: "#007bff",
-                                            marginBottom: "0.5rem",
-                                            display: "inline-block",
-                                        }}
-                                    >
-                                        📥 Download
-                                    </a>
+                                    {file.url && (
+                                        <a
+                                            href={file.url}
+                                            download
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                textDecoration: "none",
+                                                color: "#007bff",
+                                                display: "inline-block",
+                                            }}
+                                        >
+                                            📥 Download
+                                        </a>
+                                    )}
                                 </div>
 
                                 <button

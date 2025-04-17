@@ -1,15 +1,15 @@
 import express from "express";
 const router = express.Router();
 import upload from "../middleware/uploadMiddleware.js";
-import path from "path";
 import prisma from "../config/db.js";
-// import ensureAuthenticated from "../middleware/authMiddleware.js";
-import fs from "fs";
+import cloudinary from "../utils/cloudinary.js";
+import { Readable } from "stream";
 
+// Get all user files
 router.get("/", async (req, res) => {
     try {
         const files = await prisma.file.findMany({
-            where: { userId: req.user.id }, // Ensure it filters by logged-in user
+            where: { userId: req.user.id },
         });
         res.json(files);
     } catch (error) {
@@ -18,36 +18,52 @@ router.get("/", async (req, res) => {
     }
 });
 
-// File upload route
+// Upload to Cloudinary
 router.post("/upload", upload.single("file"), async (req, res) => {
-    const { folderId } = req.body; // Get folder ID from request body
-    const userId = req.user?.id; // Assuming authentication middleware sets req.user
+    const { folderId } = req.body;
+    const userId = req.user?.id;
 
     if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
     }
 
     try {
+        const bufferStream = Readable.from(req.file.buffer);
+
+        const uploadResult = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                {
+                    resource_type: "auto",
+                    folder: "file-uploader",
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            );
+            bufferStream.pipe(stream);
+        });
+
         const newFile = await prisma.file.create({
             data: {
-                name: req.file.filename,
+                name: uploadResult.public_id,
                 originalName: req.file.originalname,
                 size: req.file.size,
                 mimetype: req.file.mimetype,
-                path: req.file.path,
-                userId: userId,
-                folderId: folderId || null, // Can be null if no folder is selected
+                url: uploadResult.secure_url,
+                userId,
+                folderId: folderId || null,
             },
         });
 
         res.status(201).json(newFile);
     } catch (error) {
-        console.error("Error uploading file:", error);
-        res.status(500).json({ error: "Server error" });
+        console.error("Upload error:", error);
+        res.status(500).json({ error: "Upload failed" });
     }
 });
 
-// File download route
+// "Download" file route: just redirect or provide URL
 router.get("/download/:id", async (req, res) => {
     try {
         const file = await prisma.file.findUnique({
@@ -58,15 +74,14 @@ router.get("/download/:id", async (req, res) => {
             return res.status(404).json({ message: "File not found" });
         }
 
-        const filePath = path.join(process.cwd(), file.path);
-        // console.log(filePath);
-        res.download(filePath, file.originalName);
+        res.redirect(file.url); // Or return the URL instead
     } catch (error) {
-        console.error("Download error:", error);
+        console.error("Redirect error:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
 
+// Move file to folder
 router.put("/:fileId/move", async (req, res) => {
     const { fileId } = req.params;
     const { newFolderId } = req.body;
@@ -74,7 +89,7 @@ router.put("/:fileId/move", async (req, res) => {
     try {
         const updatedFile = await prisma.file.update({
             where: { id: fileId },
-            data: { folderId: newFolderId || null }, // Move to a folder or set as "unsorted"
+            data: { folderId: newFolderId || null },
         });
 
         res.json(updatedFile);
@@ -84,13 +99,11 @@ router.put("/:fileId/move", async (req, res) => {
     }
 });
 
-// Route to get file details
+// File details
 router.get("/:fileId/details", async (req, res) => {
-    const { fileId } = req.params;
-
     try {
         const file = await prisma.file.findUnique({
-            where: { id: fileId }, // Since ID is a UUID (string), no need to parseInt
+            where: { id: req.params.fileId },
         });
 
         if (!file) {
@@ -100,10 +113,10 @@ router.get("/:fileId/details", async (req, res) => {
         res.json({
             id: file.id,
             name: file.name,
-            size: file.size, // Ensure this field exists in your schema
+            size: file.size,
             mimetype: file.mimetype,
-            uploadTime: file.createdAt, // Prisma uses camelCase
-            path: file.path, // Assuming path is stored in DB
+            uploadTime: file.createdAt,
+            url: file.url,
         });
     } catch (error) {
         console.error("Error fetching file details:", error);
@@ -111,46 +124,38 @@ router.get("/:fileId/details", async (req, res) => {
     }
 });
 
-// DELETE /api/files/:id - Delete a file
+// Delete file from Cloudinary and DB
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Find file in DB
         const file = await prisma.file.findUnique({ where: { id } });
         if (!file) {
             return res.status(404).json({ message: "File not found" });
         }
 
-        // Get full file path
-        const filePath = path.join(process.cwd(), "uploads", file.path);
-
-        // Delete file from filesystem
-        fs.unlink(filePath, async (err) => {
-            if (err && err.code !== "ENOENT") {
-                console.error("Error deleting file:", err);
-                return res
-                    .status(500)
-                    .json({ message: "Failed to delete file" });
-            }
-
-            // Delete file record from DB
-            await prisma.file.delete({ where: { id } });
-
-            res.json({ message: "File deleted successfully" });
+        // Delete from Cloudinary
+        await cloudinary.uploader.destroy(file.name, {
+            resource_type: "image", // or "auto" if you're supporting different types
         });
+
+        // Delete from database
+        await prisma.file.delete({ where: { id } });
+
+        res.json({ message: "File deleted successfully" });
     } catch (error) {
         console.error("Error deleting file:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
 
-// GET /api/files/unsorted
+// Get unsorted files (no folderId)
 router.get("/unsorted", async (req, res) => {
     try {
         const unsortedFiles = await prisma.file.findMany({
-            where: { folderId: null },
+            where: { folderId: null, userId: req.user.id },
         });
+
         res.json(unsortedFiles);
     } catch (error) {
         console.error("Error fetching unsorted files:", error);

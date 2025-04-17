@@ -11,11 +11,9 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
         const fetchFolders = async () => {
             try {
                 const { data } = await axios.get("/api/folders");
-                // Sort by createdAt (oldest first)
                 const sortedFolders = data.sort(
                     (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
                 );
-
                 setFolders(sortedFolders);
             } catch (error) {
                 console.error("Error fetching folders:", error);
@@ -44,13 +42,28 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             setSelectedFile(null);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ""; // Reset input field
-            }
-            refreshFiles(); // Refresh the file list
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            refreshFiles();
         } catch (error) {
             console.error("Error uploading file:", error);
         }
+    };
+
+    const baseInputStyle = {
+        fontSize: "1rem",
+        padding: "0.6rem",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        backgroundColor: "#fff",
+    };
+
+    const buttonStyle = {
+        padding: "0.6rem 1.2rem",
+        fontSize: "1rem",
+        borderRadius: "6px",
+        border: "none",
+        cursor: "pointer",
+        fontWeight: "500",
     };
 
     return (
@@ -59,24 +72,22 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
                 display: "flex",
                 flexDirection: "column",
                 gap: "1rem",
-                padding: "1rem",
+                padding: "1.5rem",
                 marginTop: "2rem",
                 border: "1px solid #ccc",
-                borderRadius: "8px",
-                backgroundColor: "#f9f9f9",
+                borderRadius: "12px",
+                backgroundColor: "#fefefe",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                maxWidth: "480px",
             }}
         >
+            <h3 style={{ marginBottom: "0.5rem" }}>📤 Upload a File</h3>
+
             <input
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                style={{
-                    fontSize: "1rem",
-                    padding: "0.5rem",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#fff",
-                }}
+                style={baseInputStyle}
             />
 
             {selectedFile && (
@@ -86,9 +97,10 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
                         alignItems: "center",
                         gap: "1rem",
                         backgroundColor: "#fff",
-                        padding: "0.5rem",
-                        borderRadius: "6px",
+                        padding: "0.75rem",
+                        borderRadius: "8px",
                         border: "1px solid #ddd",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
                     }}
                 >
                     {selectedFile.type.startsWith("image/") ? (
@@ -103,7 +115,11 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
                             }}
                         />
                     ) : (
-                        <span role="img" aria-label="file">
+                        <span
+                            role="img"
+                            aria-label="file"
+                            style={{ fontSize: "1.5rem" }}
+                        >
                             📄
                         </span>
                     )}
@@ -116,37 +132,40 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
                 </div>
             )}
 
-            {/* Folder Selection Dropdown */}
-            <select
-                value={selectedFolder}
-                onChange={(e) => setSelectedFolder(e.target.value)}
+            <div
                 style={{
-                    fontSize: "1rem",
-                    padding: "0.5rem",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#fff",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
                 }}
             >
-                <option value="">📂 No Folder</option>
-                {folders.map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                        📁 {folder.name}
-                    </option>
-                ))}
-            </select>
+                <label
+                    htmlFor="folderSelect"
+                    style={{ fontWeight: "bold", fontSize: "0.95rem" }}
+                >
+                    Save to Folder
+                </label>
+                <select
+                    id="folderSelect"
+                    value={selectedFolder}
+                    onChange={(e) => setSelectedFolder(e.target.value)}
+                    style={baseInputStyle}
+                >
+                    <option value="">📂 No Folder</option>
+                    {folders.map((folder) => (
+                        <option key={folder.id} value={folder.id}>
+                            📁 {folder.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             <button
                 onClick={handleUpload}
                 style={{
+                    ...buttonStyle,
                     backgroundColor: "#4CAF50",
                     color: "white",
-                    padding: "0.75rem 1.25rem",
-                    fontSize: "1rem",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    alignSelf: "flex-start",
                 }}
             >
                 ⬆ Upload

@@ -1,5 +1,10 @@
 const FileModal = ({ file, onClose }) => {
-    return file ? (
+    if (!file) return null;
+
+    const isImage = file.mimetype?.startsWith("image/");
+    const readableSize = (file.size / 1024).toFixed(1); // KB
+
+    return (
         <div
             style={{
                 position: "fixed",
@@ -27,13 +32,13 @@ const FileModal = ({ file, onClose }) => {
                 }}
             >
                 <h3 style={{ marginBottom: "0.75rem", fontSize: "1.2rem" }}>
-                    {file.name}
+                    {file.originalName || file.name}
                 </h3>
 
-                {/\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(file.name) ? (
+                {isImage && file.url ? (
                     <img
-                        src={`http://localhost:5000/${file.path}`}
-                        alt={file.name}
+                        src={file.url}
+                        alt={file.originalName}
                         style={{
                             maxWidth: "100%",
                             maxHeight: "400px",
@@ -48,25 +53,29 @@ const FileModal = ({ file, onClose }) => {
                     </p>
                 )}
 
-                <p style={{ margin: "0.5rem 0" }}>📦 Size: {file.size} KB</p>
+                <p style={{ margin: "0.5rem 0" }}>📦 Size: {readableSize} KB</p>
                 <p style={{ margin: "0.5rem 0" }}>
                     📅 Uploaded: {new Date(file.createdAt).toLocaleString()}
                 </p>
 
-                <a
-                    href={`http://localhost:5000/${file.path}`}
-                    download
-                    style={{
-                        display: "inline-block",
-                        marginTop: "0.8rem",
-                        marginBottom: "0.5rem",
-                        color: "#007bff",
-                        fontSize: "0.9rem",
-                        textDecoration: "none",
-                    }}
-                >
-                    📥 Download
-                </a>
+                {file.url && (
+                    <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        style={{
+                            display: "inline-block",
+                            marginTop: "0.8rem",
+                            marginBottom: "0.5rem",
+                            color: "#007bff",
+                            fontSize: "0.9rem",
+                            textDecoration: "none",
+                        }}
+                    >
+                        📥 Download
+                    </a>
+                )}
 
                 <div>
                     <button
@@ -87,7 +96,7 @@ const FileModal = ({ file, onClose }) => {
                 </div>
             </div>
         </div>
-    ) : null;
+    );
 };
 
 export default FileModal;

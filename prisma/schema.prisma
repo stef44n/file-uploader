@@ -30,7 +30,7 @@ model File {
   originalName String
   size         Int
   mimetype     String
-  path         String
+  url          String? // This replaces 'path'
   userId       String
   user         User     @relation(fields: [userId], references: [id])
   folderId     String?

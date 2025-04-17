@@ -15,9 +15,7 @@ const UnsortedFiles = ({
         if (!newFolderId) return;
 
         try {
-            await axios.put(`/api/files/${fileId}/move`, {
-                newFolderId,
-            });
+            await axios.put(`/api/files/${fileId}/move`, { newFolderId });
             fetchUnsortedFiles();
             refreshFolders();
         } catch (error) {
@@ -34,6 +32,10 @@ const UnsortedFiles = ({
         }
     };
 
+    // const isImageFile = (name) => /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(name);
+    const isImageFile = (file) =>
+        file.mimetype && file.mimetype.startsWith("image/");
+
     return (
         <div
             style={{
@@ -45,10 +47,14 @@ const UnsortedFiles = ({
         >
             {unsortedFiles.length > 0 ? (
                 unsortedFiles.map((file) => {
-                    const isImage = /\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(
-                        file.name
-                    );
                     const fileId = file.id;
+                    // const isImage = isImageFile(file.name);
+                    const isImage = isImageFile(file);
+
+                    // console.log(
+                    //     "unsortedFiles------------***************",
+                    //     unsortedFiles
+                    // );
 
                     return (
                         <div
@@ -57,7 +63,7 @@ const UnsortedFiles = ({
                                 backgroundColor: "#fff",
                                 padding: "1rem",
                                 borderRadius: "10px",
-                                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.08)",
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
@@ -66,7 +72,7 @@ const UnsortedFiles = ({
                         >
                             {isImage ? (
                                 <img
-                                    src={`http://localhost:5000/${file.path}`}
+                                    src={file.url}
                                     alt={file.name}
                                     style={{
                                         width: "100%",
@@ -87,8 +93,6 @@ const UnsortedFiles = ({
                                         justifyContent: "center",
                                         backgroundColor: "#f0f0f0",
                                         borderRadius: "6px",
-                                        boxShadow:
-                                            "inset 0 1px 3px rgba(0, 0, 0, 0.05)",
                                         padding: "0.5rem",
                                         marginBottom: "0.5rem",
                                         fontSize: "0.85rem",
@@ -100,7 +104,7 @@ const UnsortedFiles = ({
                             )}
 
                             <a
-                                href={`http://localhost:5000/${file.path}`}
+                                href={file.url}
                                 download
                                 style={{
                                     fontSize: "0.85rem",
@@ -145,6 +149,7 @@ const UnsortedFiles = ({
                                         </option>
                                     ))}
                                 </select>
+
                                 <button
                                     onClick={() => handleMoveFile(fileId)}
                                     disabled={!moveSelections[fileId]}
