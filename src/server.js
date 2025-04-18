@@ -25,7 +25,7 @@ const pool = new Pool({
 
 app.use(
     cors({
-        origin: "http://localhost:5000", // Adjust to your frontend URL
+        origin: process.env.FRONTEND_URL || "http://localhost:5000", // Adjust to your frontend URL
         credentials: true, // Allow cookies to be sent
     })
 );
