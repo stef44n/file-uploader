@@ -41,7 +41,7 @@ app.use(
         secret: process.env.SESSION_SECRET || "supersecret",
         resave: false,
         saveUninitialized: false,
-        cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, // Use secure: true for production
+        cookie: { secure: true, maxAge: 24 * 60 * 60 * 1000 }, // Use secure: true for production
     })
 );
 
