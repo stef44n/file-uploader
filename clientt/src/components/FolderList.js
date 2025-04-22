@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import {
+    createFolder,
+    renameFolder,
+    deleteFolder as deleteFolderApi,
+} from "../api";
+// import axios from "axios";
 
 const FolderList = ({
     folders,
@@ -14,12 +19,10 @@ const FolderList = ({
     const [showNewFolderInput, setShowNewFolderInput] = useState(false);
     const [showRenameInput, setShowRenameInput] = useState(false);
 
-    const createFolder = async () => {
+    const createFolderFn = async () => {
         if (!newFolderName.trim()) return;
         try {
-            const { data } = await axios.post("/api/folders", {
-                name: newFolderName,
-            });
+            await createFolder(newFolderName);
             refreshFolders();
             setNewFolderName(""); // Reset input after creation
         } catch (error) {
@@ -27,20 +30,11 @@ const FolderList = ({
         }
     };
 
-    // const renameFolder = async (id, newName) => {
-    //     if (!newName.trim()) return;
-    //     await axios.put(`/api/folders/${id}`, { name: newName });
-    //     refreshFolders();
-    // };
-
     const handleRename = async () => {
         if (!renameInput.trim() || !selectedFolderId) return;
 
         try {
-            await axios.put(`/api/folders/${selectedFolderId}`, {
-                name: renameInput,
-            });
-
+            await renameFolder(selectedFolderId, renameInput);
             await refreshFolders(); // Refresh after renaming
             // setRenameInput(""); // Clear input
         } catch (error) {
@@ -50,9 +44,13 @@ const FolderList = ({
 
     const deleteFolder = async (id) => {
         if (!window.confirm("Delete this folder and all its files?")) return;
-        await axios.delete(`/api/folders/${id}`);
-        refreshFolders();
-        onSelect(null);
+        try {
+            await deleteFolderApi(id);
+            refreshFolders();
+            onSelect(null);
+        } catch (error) {
+            console.error("Error deleting folder:", error);
+        }
     };
 
     const handleSelectFolder = (folder) => {
@@ -64,7 +62,7 @@ const FolderList = ({
     };
 
     const createFolderWrapper = async () => {
-        await createFolder(); // your existing createFolder function
+        await createFolderFn(); // your existing createFolder function
         setNewFolderName("");
         setShowNewFolderInput(false);
     };

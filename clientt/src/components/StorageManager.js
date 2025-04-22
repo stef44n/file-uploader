@@ -4,6 +4,7 @@ import FolderList from "./FolderList";
 import FileManager from "./FileManager";
 import UnsortedFiles from "./UnsortedFiles";
 import FileUpload from "./FileUpload";
+import { getFolders } from "../api";
 
 const StorageManager = () => {
     const [folders, setFolders] = useState([]);
@@ -14,7 +15,7 @@ const StorageManager = () => {
     // Fetch folders and files
     const fetchFolders = async () => {
         try {
-            const { data } = await axios.get("/api/folders");
+            const { data } = await getFolders();
 
             // Sort folders by creation date (oldest to newest)
             const sortedFolders = data.sort(
