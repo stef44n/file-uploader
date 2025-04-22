@@ -77,4 +77,10 @@ router.get("/me", async (req, res) => {
     res.json({ user });
 });
 
+router.get("/debug-session", (req, res) => {
+    console.log("Cookies:", req.cookies);
+    console.log("Session:", req.session);
+    res.json({ session: req.session });
+});
+
 export default router;

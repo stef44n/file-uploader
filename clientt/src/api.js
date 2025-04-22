@@ -15,9 +15,11 @@ const API = axios.create({
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
 //
 export const register = (data) => API.post("/auth/register", data);
-export const login = (data) => API.post("/auth/login", data);
+export const login = (data) =>
+    API.post("/auth/login", data, { withCredentials: true });
 export const getUser = () => API.get("/auth/me");
-export const logout = () => API.post("/auth/logout");
+export const logout = () =>
+    API.post("/auth/logout", null, { withCredentials: true });
 
 //
 // ─── FOLDERS ────────────────────────────────────────────────────────────────────
