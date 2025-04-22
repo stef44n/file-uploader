@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import FileModal from "./FileModal";
+import { moveFile, deleteFile as deleteFileApi } from "../api";
 
 const FileManager = ({
     selectedFolder,
@@ -20,9 +20,7 @@ const FileManager = ({
         try {
             const newFolderId = moveTargets[fileId] || null;
 
-            await axios.put(`/api/files/${fileId}/move`, {
-                newFolderId,
-            });
+            await moveFile(fileId, newFolderId);
 
             setMoveTargets((prev) => {
                 const updated = { ...prev };
@@ -39,7 +37,7 @@ const FileManager = ({
 
     const deleteFile = async (fileId) => {
         try {
-            await axios.delete(`/api/files/${fileId}`);
+            await deleteFileApi(fileId);
             refreshFiles?.(selectedFolder?.id);
         } catch (error) {
             console.error("Error deleting file:", error);

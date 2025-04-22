@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { moveFile, deleteFile as deleteFileApi } from "../api";
 
 const UnsortedFiles = ({
     unsortedFiles,
@@ -15,7 +15,7 @@ const UnsortedFiles = ({
         if (!newFolderId) return;
 
         try {
-            await axios.put(`/api/files/${fileId}/move`, { newFolderId });
+            await moveFile(fileId, newFolderId);
             fetchUnsortedFiles();
             refreshFolders();
         } catch (error) {
@@ -25,7 +25,7 @@ const UnsortedFiles = ({
 
     const handleDelete = async (fileId) => {
         try {
-            await axios.delete(`/api/files/${fileId}`);
+            await deleteFileApi(fileId);
             fetchUnsortedFiles();
         } catch (error) {
             console.error("Error deleting file:", error);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import { getFolders, uploadFile } from "../api";
 
 const FileUpload = ({ refreshFiles, currentFolderId }) => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -10,7 +10,7 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
     useEffect(() => {
         const fetchFolders = async () => {
             try {
-                const { data } = await axios.get("/api/folders");
+                const { data } = await getFolders();
                 const sortedFolders = data.sort(
                     (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
                 );
@@ -38,9 +38,7 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
         formData.append("folderId", selectedFolder);
 
         try {
-            await axios.post("/api/files/upload", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            await uploadFile(formData);
             setSelectedFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
             refreshFiles();

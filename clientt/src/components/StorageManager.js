@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import FolderList from "./FolderList";
 import FileManager from "./FileManager";
 import UnsortedFiles from "./UnsortedFiles";
 import FileUpload from "./FileUpload";
-import { getFolders } from "../api";
+import { getFolders, getFolderFiles, getUnsortedFiles } from "../api";
 
 const StorageManager = () => {
     const [folders, setFolders] = useState([]);
@@ -30,7 +29,7 @@ const StorageManager = () => {
 
     const fetchFiles = async (folderId) => {
         try {
-            const { data } = await axios.get(`/api/folders/${folderId}/files`);
+            const { data } = await getFolderFiles(folderId);
             setFiles(data);
         } catch (error) {
             console.error("Error fetching files:", error);
@@ -39,7 +38,7 @@ const StorageManager = () => {
 
     const fetchUnsortedFiles = async () => {
         try {
-            const { data } = await axios.get("/api/files/unsorted");
+            const { data } = await getUnsortedFiles();
             setUnsortedFiles(data);
         } catch (error) {
             console.error("Error fetching unsorted files:", error);
