@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getFolders, uploadFile } from "../api";
+import { toast } from "react-toastify";
 
 const FileUpload = ({ refreshFiles, currentFolderId }) => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -39,11 +40,13 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
 
         try {
             await uploadFile(formData);
+            toast.success("File uploaded!");
             setSelectedFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
             refreshFiles();
         } catch (error) {
             console.error("Error uploading file:", error);
+            toast.error("Upload failed. Please try again.");
         }
     };
 

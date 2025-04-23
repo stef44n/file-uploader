@@ -4,7 +4,7 @@ import {
     renameFolder,
     deleteFolder as deleteFolderApi,
 } from "../api";
-// import axios from "axios";
+import { toast } from "react-toastify";
 
 const FolderList = ({
     folders,
@@ -23,10 +23,12 @@ const FolderList = ({
         if (!newFolderName.trim()) return;
         try {
             await createFolder(newFolderName);
+            toast.success("Folder created!");
             refreshFolders();
             setNewFolderName(""); // Reset input after creation
         } catch (error) {
             console.error("Error creating folder:", error);
+            toast.error("Failed to create a folder. Please try again.");
         }
     };
 
@@ -35,10 +37,12 @@ const FolderList = ({
 
         try {
             await renameFolder(selectedFolderId, renameInput);
+            toast.success("Folder renamed!");
             await refreshFolders(); // Refresh after renaming
             // setRenameInput(""); // Clear input
         } catch (error) {
             console.error("Error renaming folder:", error);
+            toast.error("Rename failed. Please try again.");
         }
     };
 
@@ -46,10 +50,12 @@ const FolderList = ({
         if (!window.confirm("Delete this folder and all its files?")) return;
         try {
             await deleteFolderApi(id);
+            toast.success("Folder deleted.");
             refreshFolders();
             onSelect(null);
         } catch (error) {
             console.error("Error deleting folder:", error);
+            toast.error("Failed to delete folder. Please try again.");
         }
     };
 

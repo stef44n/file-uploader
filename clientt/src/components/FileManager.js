@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import FileModal from "./FileModal";
 import { moveFile, deleteFile as deleteFileApi } from "../api";
+import { toast } from "react-toastify";
 
 const FileManager = ({
     selectedFolder,
@@ -21,6 +22,7 @@ const FileManager = ({
             const newFolderId = moveTargets[fileId] || null;
 
             await moveFile(fileId, newFolderId);
+            toast.success("File moved!");
 
             setMoveTargets((prev) => {
                 const updated = { ...prev };
@@ -32,15 +34,19 @@ const FileManager = ({
             refreshFiles?.(selectedFolder?.id);
         } catch (error) {
             console.error("Error moving file:", error);
+            toast.error("File move failed!");
         }
     };
 
     const deleteFile = async (fileId) => {
         try {
             await deleteFileApi(fileId);
+            toast.success("File deleted!");
+
             refreshFiles?.(selectedFolder?.id);
         } catch (error) {
             console.error("Error deleting file:", error);
+            toast.error("File not deleted!");
             alert("There was an issue deleting the file.");
         }
     };
