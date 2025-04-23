@@ -6,6 +6,7 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [folders, setFolders] = useState([]);
     const [selectedFolder, setSelectedFolder] = useState(currentFolderId || "");
+    const [uploading, setUploading] = useState(false); // ← uploading flag
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -34,6 +35,8 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
             return;
         }
 
+        setUploading(true);
+
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("folderId", selectedFolder);
@@ -47,6 +50,8 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
         } catch (error) {
             console.error("Error uploading file:", error);
             toast.error("Upload failed. Please try again.");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -163,13 +168,14 @@ const FileUpload = ({ refreshFiles, currentFolderId }) => {
 
             <button
                 onClick={handleUpload}
+                disabled={uploading}
                 style={{
                     ...buttonStyle,
                     backgroundColor: "#4CAF50",
                     color: "white",
                 }}
             >
-                ⬆ Upload
+                {uploading ? "Uploading…" : "⬆ Upload"}
             </button>
         </div>
     );

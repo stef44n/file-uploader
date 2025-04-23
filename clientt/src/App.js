@@ -8,6 +8,7 @@ function App() {
     const [user, setUser] = useState(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false); // ← loading flag
 
     useEffect(() => {
         getUser()
@@ -17,31 +18,38 @@ function App() {
 
     // ─── Register ─────────────────────────────────────────────────────────────
     const handleRegister = async () => {
+        setLoading(true);
         try {
             await register({ email, password });
-            toast.success("Registered successfully! Please log in.");
+            toast.success("Registered! Please log in.");
             setEmail("");
             setPassword("");
         } catch (err) {
-            console.error("Register error:", err);
-            toast.error(err.response?.data?.message || "Registration failed.");
+            console.error("Registration error:", err);
+            toast.error("Registration failed.");
+        } finally {
+            setLoading(false);
         }
     };
 
     // ─── Login ────────────────────────────────────────────────────────────────
     const handleLogin = async () => {
+        setLoading(true);
         try {
             const { data } = await login({ email, password });
             setUser(data.user);
-            toast.success("Logged in successfully!");
+            toast.success("Logged in!");
         } catch (err) {
             console.error("Login error:", err);
-            toast.error(err.response?.data?.message || "Login failed.");
+            toast.error("Login failed.");
+        } finally {
+            setLoading(false);
         }
     };
 
     // ─── Logout ───────────────────────────────────────────────────────────────
     const handleLogout = async () => {
+        setLoading(true);
         try {
             await logout();
             setUser(null);
@@ -49,6 +57,8 @@ function App() {
         } catch (err) {
             console.error("Logout error:", err);
             toast.error("Logout failed.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -63,6 +73,7 @@ function App() {
                 pauseOnHover
                 theme="colored"
             />
+
             <div
                 style={{
                     maxWidth: "600px",
@@ -94,6 +105,7 @@ function App() {
                             </p>
                             <button
                                 onClick={handleLogout}
+                                disabled={loading}
                                 style={{
                                     padding: "0.5rem 1rem",
                                     fontSize: "1rem",
@@ -101,13 +113,12 @@ function App() {
                                     color: "#fff",
                                     border: "none",
                                     borderRadius: "6px",
-                                    cursor: "pointer",
+                                    cursor: loading ? "not-allowed" : "pointer",
                                 }}
                             >
-                                Logout
+                                {loading ? "Logging out…" : "Logout"}
                             </button>
                         </div>
-
                         <StorageManager />
                     </>
                 ) : (
@@ -122,6 +133,7 @@ function App() {
                             placeholder="Email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            disabled={loading}
                             style={{
                                 padding: "0.75rem",
                                 fontSize: "1rem",
@@ -134,6 +146,7 @@ function App() {
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            disabled={loading}
                             style={{
                                 padding: "0.75rem",
                                 fontSize: "1rem",
@@ -150,6 +163,7 @@ function App() {
                         >
                             <button
                                 onClick={handleRegister}
+                                disabled={loading}
                                 style={{
                                     padding: "0.6rem 1.2rem",
                                     fontSize: "1rem",
@@ -157,13 +171,14 @@ function App() {
                                     color: "#fff",
                                     border: "none",
                                     borderRadius: "6px",
-                                    cursor: "pointer",
+                                    cursor: loading ? "not-allowed" : "pointer",
                                 }}
                             >
-                                Register
+                                {loading ? "Registering…" : "Register"}
                             </button>
                             <button
                                 onClick={handleLogin}
+                                disabled={loading}
                                 style={{
                                     padding: "0.6rem 1.2rem",
                                     fontSize: "1rem",
@@ -171,10 +186,10 @@ function App() {
                                     color: "#fff",
                                     border: "none",
                                     borderRadius: "6px",
-                                    cursor: "pointer",
+                                    cursor: loading ? "not-allowed" : "pointer",
                                 }}
                             >
-                                Login
+                                {loading ? "Logging in…" : "Login"}
                             </button>
                         </div>
                     </div>
