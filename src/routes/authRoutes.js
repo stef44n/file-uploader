@@ -2,6 +2,7 @@ import express from "express";
 import passport from "../config/passport.js";
 import bcrypt from "bcrypt";
 import prisma from "../config/db.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -21,27 +22,16 @@ router.post("/register", async (req, res) => {
     }
 });
 
-// Login
-router.post("/login", passport.authenticate("local"), (req, res) => {
-    req.login(req.user, (err) => {
-        if (err) {
-            console.error("❌ Error logging in:", err);
-            return res.status(500).json({ message: "Login failed" });
-        }
-
-        req.session.passport = { user: req.user.id }; // Manually attach user ID
-        req.session.save((err) => {
-            if (err) {
-                console.error("❌ Error saving session:", err);
-                return res.status(500).json({ message: "Session error" });
-            }
-
-            console.log("✅ Session saved:", req.session);
-            console.log("🔹 Sending session cookie now...");
-
-            res.json({ message: "Logged in successfully", user: req.user });
-        });
-    });
+// Login → issue a token instead of session cookie
+router.post("/login", passport.authenticate("local"), async (req, res) => {
+    const user = req.user;
+    // Sign a token with user ID (and maybe email), expires in e.g. 1h
+    const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+    );
+    res.json({ token, user: { id: user.id, email: user.email } });
 });
 
 // Logout

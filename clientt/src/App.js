@@ -11,9 +11,8 @@ function App() {
     const [loading, setLoading] = useState(false); // ← loading flag
 
     useEffect(() => {
-        getUser()
-            .then(({ data }) => setUser(data.user))
-            .catch(() => setUser(null));
+        const saved = localStorage.getItem("user");
+        if (saved) setUser(JSON.parse(saved));
     }, []);
 
     // ─── Register ─────────────────────────────────────────────────────────────
@@ -38,6 +37,7 @@ function App() {
         try {
             const { data } = await login({ email, password });
             setUser(data.user);
+            localStorage.setItem("user", JSON.stringify(data.user));
             toast.success("Logged in!");
         } catch (err) {
             console.error("Login error:", err);
@@ -53,6 +53,7 @@ function App() {
         try {
             await logout();
             setUser(null);
+            localStorage.removeItem("user");
             toast.info("Logged out.");
         } catch (err) {
             console.error("Logout error:", err);

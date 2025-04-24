@@ -8,18 +8,38 @@ const API = axios.create({
         process.env.NODE_ENV === "development"
             ? "/api"
             : `${process.env.REACT_APP_API_URL}/api`,
-    withCredentials: true,
 });
+
+// Add a request interceptor to read token from localStorage
+API.interceptors.request.use((config) => {
+    const token = localStorage.getItem("jwt");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+export default API;
 
 //
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
 //
 export const register = (data) => API.post("/auth/register", data);
-export const login = (data) =>
-    API.post("/auth/login", data, { withCredentials: true });
-export const getUser = () => API.get("/auth/me");
-export const logout = () =>
-    API.post("/auth/logout", null, { withCredentials: true });
+export const login = async (data) => {
+    const res = await API.post("/auth/login", data);
+    // store token
+    localStorage.setItem("jwt", res.data.token);
+    return res;
+};
+export const getUser = () => {
+    // you can decode JWT client‑side, or simply return the last-known user
+    return Promise.resolve({
+        data: { user: JSON.parse(localStorage.getItem("user")) },
+    });
+};
+export const logout = () => {
+    localStorage.removeItem("jwt");
+};
 
 //
 // ─── FOLDERS ────────────────────────────────────────────────────────────────────

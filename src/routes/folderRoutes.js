@@ -1,11 +1,11 @@
 import express from "express";
 import prisma from "../config/db.js";
-import ensureAuthenticated from "../middleware/authMiddleware.js";
+import verifyToken from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
 // Create a folder
-router.post("/", ensureAuthenticated, async (req, res) => {
+router.post("/", verifyToken, async (req, res) => {
     const { name } = req.body;
     try {
         const folder = await prisma.folder.create({
@@ -19,7 +19,7 @@ router.post("/", ensureAuthenticated, async (req, res) => {
 });
 
 // Get all folders for logged-in user
-router.get("/", ensureAuthenticated, async (req, res) => {
+router.get("/", verifyToken, async (req, res) => {
     try {
         const folders = await prisma.folder.findMany({
             where: { userId: req.user.id },
@@ -69,7 +69,7 @@ router.get("/:folderId/files", async (req, res) => {
 });
 
 // Update folder name
-router.put("/:id", ensureAuthenticated, async (req, res) => {
+router.put("/:id", verifyToken, async (req, res) => {
     const { id } = req.params;
     const { name } = req.body;
     try {
@@ -85,7 +85,7 @@ router.put("/:id", ensureAuthenticated, async (req, res) => {
 });
 
 // Delete a folder
-router.delete("/:id", ensureAuthenticated, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res) => {
     const folderId = req.params.id; // UUID
 
     try {
