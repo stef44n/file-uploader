@@ -39,7 +39,6 @@ const FolderList = ({
             await renameFolder(selectedFolderId, renameInput);
             toast.success("Folder renamed!");
             await refreshFolders(); // Refresh after renaming
-            // setRenameInput(""); // Clear input
         } catch (error) {
             console.error("Error renaming folder:", error);
             toast.error("Rename failed. Please try again.");
@@ -68,7 +67,7 @@ const FolderList = ({
     };
 
     const createFolderWrapper = async () => {
-        await createFolderFn(); // your existing createFolder function
+        await createFolderFn();
         setNewFolderName("");
         setShowNewFolderInput(false);
     };
@@ -97,6 +96,7 @@ const FolderList = ({
                         <div
                             style={{
                                 display: "flex",
+                                flexWrap: "wrap",
                                 gap: "0.5rem",
                                 marginTop: "0.5rem",
                             }}
@@ -226,7 +226,13 @@ const FolderList = ({
                             ✏️ Rename Folder
                         </button>
                     ) : (
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "0.5rem",
+                            }}
+                        >
                             <input
                                 type="text"
                                 value={renameInput}
@@ -272,9 +278,7 @@ const FolderList = ({
                     )}
 
                     <button
-                        onClick={() => {
-                            deleteFolder(selectedFolderId);
-                        }}
+                        onClick={() => deleteFolder(selectedFolderId)}
                         style={{
                             padding: "0.5rem 1rem",
                             fontSize: "1rem",
