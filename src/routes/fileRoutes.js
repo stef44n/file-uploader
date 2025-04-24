@@ -4,6 +4,7 @@ import upload from "../middleware/uploadMiddleware.js";
 import prisma from "../config/db.js";
 import cloudinary from "../utils/cloudinary.js";
 import { Readable } from "stream";
+import verifyToken from "../middleware/verifyToken.js";
 
 // Get all user files
 router.get("/", async (req, res) => {
@@ -150,15 +151,21 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Get unsorted files (no folderId)
-router.get("/unsorted", async (req, res) => {
+router.get("/unsorted", verifyToken, async (req, res) => {
     try {
         const unsortedFiles = await prisma.file.findMany({
-            where: { folderId: null, userId: req.user.id },
+            where: {
+                folderId: null,
+                userId: req.user.id, // ◀– filter by the logged-in user
+            },
         });
-
         res.json(unsortedFiles);
     } catch (error) {
-        console.error("Error fetching unsorted files:", error);
+        console.error(
+            "Error fetching unsorted files for user",
+            req.user?.id,
+            error
+        );
         res.status(500).json({ message: "Failed to fetch unsorted files" });
     }
 });
