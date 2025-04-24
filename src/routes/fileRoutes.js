@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
 });
 
 // Upload to Cloudinary
-router.post("/upload", upload.single("file"), async (req, res) => {
+router.post("/upload", verifyToken, upload.single("file"), async (req, res) => {
     const { folderId } = req.body;
     const userId = req.user?.id;
 
@@ -60,7 +60,10 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         res.status(201).json(newFile);
     } catch (error) {
         console.error("Upload error:", error);
-        res.status(500).json({ error: "Upload failed" });
+        res.status(500).json({
+            error: "Upload failed",
+            details: error.message,
+        });
     }
 });
 
